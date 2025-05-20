@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Visualización y registro de datos en tiempo real</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #000;
+      background: url('https://static.vecteezy.com/system/resources/previews/008/137/034/non_2x/female-doctor-in-medical-clothes-with-a-stethoscope-on-a-medical-white-background-side-view-healthcare-banner-copy-space-photo.jpeg') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    header {
+      background-color: rgba(66, 165, 245, 0.95);
+      color: white;
+      width: 100%;
+      text-align: center;
+      padding: 25px 0;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      position: relative;
+    }
+    .header-img {
+      position: absolute;
+      top: 10px;
+      object-fit: contain;
+    }
+    .header-img.left {
+      left: 20px;
+      height: 80px;
+    }
+    .header-img.right {
+      right: 20px;
+      height: 110px;
+    }
+    .container {
+      margin-top: 30px;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      max-width: 1200px;
+      width: 95%;
+      text-align: center;
+      color: #000;
+    }
+    .reading {
+      font-size: 1.6rem;
+      margin: 10px 0;
+    }
+    .charts {
+      display: flex;
+      justify-content: space-around;
+      gap: 30px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+    .chart-box {
+      background-color: #f9f9f9;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      flex: 1;
+      min-width: 300px;
+    }
+    .chart-box iframe {
+      width: 100%;
+      height: 260px;
+      border: none;
+    }
+    footer {
+      margin-top: 50px;
+      padding: 15px;
+      font-size: 0.9rem;
+      color: #000;
+      background-color: rgba(0,0,0,0.1);
+      width: 100%;
+      text-align: center;
+    }
+    .status-bar {
+      margin-top: 15px;
+      font-size: 1.2rem;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b0/UNMSM_escudo_XVI-XXI_transparente_siglas_nombre_horizontal.svg" alt="Logo UNMSM" class="header-img left" />
+    <h1 style="font-family: 'Didot', serif;">Visualización y registro de datos en tiempo real</h1>
+    <img src="https://png.pngtree.com/png-clipart/20250104/original/pngtree-world-prematurity-day-art-of-baby-png-image_19014333.png" alt="Logo bebé" class="header-img right" />
+  </header>
+
+  <div class="container">
+    <h2>Datos obtenidos</h2>
+    <p class="reading">Temperatura: <span id="temp">--</span> °C</p>
+    <p class="reading">Humedad: <span id="hum">--</span> %</p>
+    <div class="status-bar" id="status">Última actualización: --:--:--</div>
+
+    <div class="charts">
+      <!-- Gráfica dinámica ThingSpeak para temperatura -->
+      <div class="chart-box">
+        <iframe src="https://thingspeak.com/channels/2967357/charts/1?api_key=JSMR869HFYDLLFJD&bgcolor=%23ffffff&color=%23e91e63&dynamic=true&results=15&type=line&update=15"></iframe>
+      </div>
+      <!-- Gráfica dinámica ThingSpeak para humedad -->
+      <div class="chart-box">
+        <iframe src="https://thingspeak.com/channels/2967357/charts/2?api_key=JSMR869HFYDLLFJD&bgcolor=%23ffffff&color=%232196f3&dynamic=true&results=15&type=line&update=15"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    &copy; 2025 - Proyecto de Ingeniería Biomédica | Incubadora Inteligente | Desarrollado por estudiantes de Ingeniería Biomédica
+  </footer>
+
+  <script>
+    const channelID = "2967357";
+    const readAPIKey = "JSMR869HFYDLLFJD";
+
+    async function updateValues() {
+      const now = new Date().toLocaleTimeString();
+      try {
+        // Temperatura
+        const resTemp = await fetch(`https://api.thingspeak.com/channels/${channelID}/fields/1/last.json?api_key=${readAPIKey}`);
+        const jsonTemp = await resTemp.json();
+        const temp = parseFloat(jsonTemp.field1);
+        document.getElementById('temp').innerText = isNaN(temp) ? "--" : temp.toFixed(1);
+
+        // Humedad
+        const resHum = await fetch(`https://api.thingspeak.com/channels/${channelID}/fields/2/last.json?api_key=${readAPIKey}`);
+        const jsonHum = await resHum.json();
+        const hum = parseFloat(jsonHum.field2);
+        document.getElementById('hum').innerText = isNaN(hum) ? "--" : hum.toFixed(1);
+
+        document.getElementById('status').innerText = `Última actualización: ${now}`;
+      } catch (e) {
+        document.getElementById('status').innerText = 'Error al obtener datos';
+        console.error(e);
+      }
+    }
+    updateValues();
+    setInterval(updateValues, 15000);
+  </script>
+</body>
+</html>
